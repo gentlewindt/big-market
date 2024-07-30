@@ -2,7 +2,6 @@ package cn.gentlewind.infrastructure.persistent.redis;
 
 import org.redisson.api.*;
 import org.springframework.stereotype.Service;
-
 import javax.annotation.Resource;
 import java.time.Duration;
 

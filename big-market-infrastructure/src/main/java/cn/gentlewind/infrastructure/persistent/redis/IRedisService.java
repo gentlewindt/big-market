@@ -1,5 +1,6 @@
 package cn.gentlewind.infrastructure.persistent.redis;
 
+
 import org.redisson.api.*;
 
 /**

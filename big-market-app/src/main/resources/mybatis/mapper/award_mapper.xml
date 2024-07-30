@@ -18,12 +18,4 @@
                  limit 10
     </select>
 
-
-    <!--    <insert id="insert" parameterType="cn.gentlewind.infrastructure.persistent.po.A">-->
-    <!--        INSERT INTO table(a,b,c) VALUES(#{a}, #{b}, #{c})-->
-    <!--    </insert>-->
-
-    <!--    <update id="update" parameterType="cn.gentlewind.infrastructure.persistent.po.A">-->
-    <!--        UPDATE table SET a = #{a} WHERE b = #{b}-->
-    <!--    </update>-->
-
+</mapper>
