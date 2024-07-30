@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.gentlewind.infrastructure.persistent.dao.IAwardDao">
+
+    <resultMap id="CaseMap" type="cn.gentlewind.infrastructure.persistent.po.AwardPO">
+        <id column="id" property="id"/>
+        <result column="award_id" property="awardId"/>
+        <result column="award_key" property="awardKey"/>
+        <result column="award_config" property="awardConfig"/>
+        <result column="award_desc" property="awardDesc"/>
+        <result column="create_time" property="create_time"/>
+        <result column="update_time" property="update_time"/>
+    </resultMap>
+
+    <select id="queryAwardList" parameterType="java.lang.String" resultMap="CaseMap">
+        SELECT id, award_id, award_key, award_config, award_desc, create_time, update_time
+        FROM S
+                 limit 10
+    </select>
+
+
+    <!--    <insert id="insert" parameterType="cn.gentlewind.infrastructure.persistent.po.A">-->
+    <!--        INSERT INTO table(a,b,c) VALUES(#{a}, #{b}, #{c})-->
+    <!--    </insert>-->
+
+    <!--    <update id="update" parameterType="cn.gentlewind.infrastructure.persistent.po.A">-->
+    <!--        UPDATE table SET a = #{a} WHERE b = #{b}-->
+    <!--    </update>-->
+
