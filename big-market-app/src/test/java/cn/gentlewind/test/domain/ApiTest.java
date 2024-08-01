@@ -1,4 +1,4 @@
-package cn.gentlewind.test;
+package cn.gentlewind.test.domain;
 
 import cn.gentlewind.infrastructure.persistent.redis.IRedisService;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +10,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
 
+/**
+ * 测试Redis
+ */
 @Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -19,7 +22,6 @@ public class ApiTest {
     private IRedisService redisService;
     @Test
     public void test() {
-
         RMap<Object, Object> map = redisService.getMap("strategy_id_100001");
         map.put(1,101);
         map.put(2,101);
