@@ -2,30 +2,28 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="cn.gentlewind.infrastructure.persistent.dao.IStrategyDao">
 
-<resultMap id="CaseMap" type="cn.gentlewind.infrastructure.persistent.po.StrategyPO">
-    <id column="id" property="id"/>
-    <result column="strategy_id" property="strategyId"/>
-    <result column="strategy_desc" property="strategyDes"/>
-    <result column="rule_models" property="createTime"/>
-    <result column="create_time" property="updateTime"/>
+    <resultMap id="CaseMap" type="cn.gentlewind.infrastructure.persistent.po.StrategyPO">
+        <id column="id" property="id"/>
+        <result column="strategy_id" property="strategyId"/>
+        <result column="strategy_desc" property="strategyDesc"/>
+        <result column="rule_modules" property="ruleModels"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
 
 
-</resultMap>
+    </resultMap>
 
-<select id="queryStrategyList" parameterType="java.lang.String" resultMap="CaseMap">
-    SELECT id, strategy_id
-    FROM Strategy
-             limit 10
-</select>
+    <select id="queryStrategyList" parameterType="java.lang.String" resultMap="CaseMap">
+        SELECT id, strategy_id
+        FROM Strategy
+        limit 10
+    </select>
 
-
-<!--    <insert id="insert" parameterType="cn.gentlewind.infrastructure.persistent.po.A">-->
-<!--        INSERT INTO table(a,b,c) VALUES(#{a}, #{b}, #{c})-->
-<!--    </insert>-->
-
-<!--    <update id="update" parameterType="cn.gentlewind.infrastructure.persistent.po.A">-->
-<!--        UPDATE table SET a = #{a} WHERE b = #{b}-->
-<!--    </update>-->
+    <select id="queryStrategyByStrategyId" parameterType="java.lang.Long" resultMap="CaseMap">
+        select strategy_id, strategy_desc, rule_models
+        from strategy
+        where strategy_id = #{strategyId}
+    </select>
 
 
 </mapper>

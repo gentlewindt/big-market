@@ -1,6 +1,8 @@
 package cn.gentlewind.domain.strategy.repository;
 
 import cn.gentlewind.domain.strategy.model.StrategyAwardEntity;
+import cn.gentlewind.domain.strategy.model.StrategyEntity;
+import cn.gentlewind.domain.strategy.model.StrategyRuleEntity;
 
 import java.util.List;
 import java.util.Map;
@@ -13,9 +15,15 @@ public interface IStrategyRepository {
     List<StrategyAwardEntity> queryStrategyAwardList(Long strategyId);
 
 
-    void storeStrategyAwardSearchRateTable(Long strategyId, Integer rateRange, Map<Integer, Long> strategyAwardSearchRateTable);
+    void storeStrategyAwardSearchRateTable(String key, Integer rateRange, Map<Integer, Long> strategyAwardSearchRateTable);
 
-    Integer getStrategyAwardAssemble(Long strategyId, Integer rateKey);
+    Integer getStrategyAwardAssemble(String key, Integer rateKey);
 
     int getRateRange(Long strategyId);
+
+    int getRateRange(String key);
+
+    StrategyEntity queryStrategyEntityByStrategyId(Long strategyId);
+
+    StrategyRuleEntity queryStrategyRule(Long strategyId, String ruleModel);
 }

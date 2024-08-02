@@ -1,7 +1,11 @@
 package cn.gentlewind.domain.strategy.service.armory;
 
 import cn.gentlewind.domain.strategy.model.StrategyAwardEntity;
+import cn.gentlewind.domain.strategy.model.StrategyEntity;
+import cn.gentlewind.domain.strategy.model.StrategyRuleEntity;
 import cn.gentlewind.domain.strategy.repository.IStrategyRepository;
+import cn.gentlewind.types.enums.ResponseCode;
+import cn.gentlewind.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -12,27 +16,82 @@ import java.security.SecureRandom;
 import java.util.*;
 
 
-@Slf4j
+
 @Service
-public class StrategyArmory implements IStrategyArmory {
+public class StrategyArmoryDispatch implements IStrategyArmory ,IStrategyDispatch{
 
     @Resource
     private IStrategyRepository repository;
 
+    /**
+     * 重新构建策略奖品概率查找表
+     *
+     * 根据不同的策略和权重配置，生成并存储不同的抽奖策略查找表
+     *
+     * @param strategyId 策略ID
+     * @return
+     */
     @Override
     public boolean assembleLotteryStrategy(Long strategyId) {
-        // 1. 查询策略配置
+        // 查询策略配置
         List<StrategyAwardEntity> strategyAwardEntities = repository.queryStrategyAwardList(strategyId);
 
+        // 构建策略奖品概率查找表
+        assembleLotteryStrategy(String.valueOf(strategyId), strategyAwardEntities);
+
+        // 查询策略实体类
+        StrategyEntity strategyEntity = repository.queryStrategyEntityByStrategyId(strategyId);
+
+        // 取出策略规则（rule_weight,rule_blacklist）
+        String ruleWeight = strategyEntity.getRuleWeight();
+        if (null == ruleWeight) return true;
+
+        // 通过策略ID和rule_weight查询策略规则，拿到策略规则实体类
+        StrategyRuleEntity strategyRuleEntity = repository.queryStrategyRule(strategyId, ruleWeight);
+        if (null == strategyRuleEntity){
+            // 如果策略规则为空，则抛出异常
+            throw new AppException(ResponseCode.STRATEGY_RULE_WEIGHT_IS_NULL.getCode(), ResponseCode.STRATEGY_RULE_WEIGHT_IS_NULL.getInfo()) ;
+        }
+
+        // 获取权重值
+        // 4000:102,103,104,105 5000:102,103,104,105,106,107 6000:102,103,104,105,106,107,108,109
+        Map<String, List<Integer>> ruleWeightValueMap = strategyRuleEntity.getRuleWeightValues();
+        // 提取所有的key，放入集合set中
+        Set<String> keys = ruleWeightValueMap.keySet();
+        // 遍历所有的权重规则
+        for (String key : keys) {
+            // 获取对应的权重值
+            List<Integer> ruleWeightValues = ruleWeightValueMap.get(key);
+            // 克隆一份策略奖品列表
+            ArrayList<StrategyAwardEntity> strategyAwardEntitiesClone = new ArrayList<>(strategyAwardEntities);
+            // 移除掉不在规则值中的奖品
+            // entity -> !ruleWeightValues.contains(entity.getAwardId())
+            // lambda表达式，接受一个StrategyAwardEntity类型的entity，判断是否在ruleWeightValues中，如果不在则返回true，表示需要移除该元素。
+            strategyAwardEntitiesClone.removeIf(entity -> !ruleWeightValues.contains(entity.getAwardId()));
+            // 重新构建策略奖品概率查找表
+            assembleLotteryStrategy(String.valueOf(strategyId).concat("_").concat(key), strategyAwardEntitiesClone);
+        }
+
+        return true;
+
+
+
+    }
+
+
+    /**
+     * 根据策略和权值装配抽奖策略
+     *
+     * @param key                   策略标识符字符串
+     * @param strategyAwardEntities 包含奖品和对应概率的实体列表
+     */
+    private void assembleLotteryStrategy(String key, List<StrategyAwardEntity> strategyAwardEntities) {
         // 2. 获取最小概率值 minAwardRate
         // 通过流式处理计算`strategyAwardEntities`列表中`awardRate`属性的最小值。
         BigDecimal minAwardRate = strategyAwardEntities.stream() // 将`strategyAwardEntities`列表转换为流。
                 .map(StrategyAwardEntity::getAwardRate) // 将每个StrategyAwardEntity对象的awardRate属性转换为BigDecimal类型。
                 .min(BigDecimal::compareTo) // 对每个BigDecimal对象执行compareTo进行自然排序，并返回最小值。
                 .orElse(BigDecimal.ZERO); // 如果`strategyAwardEntities`列表为空，则返回BigDecimal.ZERO零值
-        if(minAwardRate == BigDecimal.valueOf(0)){
-            log.info("最小概率为0");
-        }
 
 
         // 3. 获取概率值总和 totalAwardRate
@@ -82,9 +141,24 @@ public class StrategyArmory implements IStrategyArmory {
         }
 
         // 8. 将查找表存放到 Redis
-        repository.storeStrategyAwardSearchRateTable(strategyId, shuffleStrategyAwardSearchRateTable.size(), shuffleStrategyAwardSearchRateTable);
+        repository.storeStrategyAwardSearchRateTable(key, shuffleStrategyAwardSearchRateTable.size(), shuffleStrategyAwardSearchRateTable);
 
-        return true;
+    }
+    @Override
+    public Integer getRandomAwardId(Long strategyId) {
+        // 分布式部署下，不一定为当前应用做的策略装配。也就是值不一定会保存到本应用，而是分布式应用，所以需要从 Redis 中获取。
+        int rateRange = repository.getRateRange(strategyId);
+        // 通过生成的随机值，获取概率值奖品查找表的结果
+        return repository.getStrategyAwardAssemble(String.valueOf(strategyId), new SecureRandom().nextInt(rateRange));
+    }
+
+    @Override
+    public Integer getRandomAwardId(Long strategyId, String ruleWeightValue) {
+        String key = String.valueOf(strategyId).concat("_").concat(ruleWeightValue);
+        // 分布式部署下，不一定为当前应用做的策略装配。也就是值不一定会保存到本应用，而是分布式应用，所以需要从 Redis 中获取。
+        int rateRange = repository.getRateRange(key);
+        // 通过生成的随机值，获取概率值奖品查找表的结果
+        return repository.getStrategyAwardAssemble(key, new SecureRandom().nextInt(rateRange));
     }
 
     /**
@@ -93,12 +167,12 @@ public class StrategyArmory implements IStrategyArmory {
      * @param strategyId 策略ID：分布式部署下，不一定为当前应用做的策略装配。也就是值不一定会保存到本应用，而是分布式应用，所以需要从 Redis 中获取策略id
      * @return
      */
-    @Override
-    public Integer getRandomAwardId(Long strategyId) {
-        int rateRange = repository.getRateRange(strategyId);
-        // 通过生成的随机值，获取概率值奖品查找表的结果
-        return repository.getStrategyAwardAssemble(strategyId, new SecureRandom().nextInt(rateRange));
-        // SecureRandom().nextInt(rateRange): 生成一个随机整数，范围为0到rateRange-1。（不含rateRange）
-    }
+//    @Override
+//    public Integer getRandomAwardId(Long strategyId) {
+//        int rateRange = repository.getRateRange(strategyId);
+//        // 通过生成的随机值，获取概率值奖品查找表的结果
+//        return repository.getStrategyAwardAssemble(strategyId, new SecureRandom().nextInt(rateRange));
+//        // SecureRandom().nextInt(rateRange): 生成一个随机整数，范围为0到rateRange-1。（不含rateRange）
+//    }
 
 }
