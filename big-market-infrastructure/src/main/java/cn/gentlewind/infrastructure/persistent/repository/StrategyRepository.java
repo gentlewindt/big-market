@@ -1,8 +1,8 @@
 package cn.gentlewind.infrastructure.persistent.repository;
 
-import cn.gentlewind.domain.strategy.model.StrategyAwardEntity;
-import cn.gentlewind.domain.strategy.model.StrategyEntity;
-import cn.gentlewind.domain.strategy.model.StrategyRuleEntity;
+import cn.gentlewind.domain.strategy.model.entity.StrategyAwardEntity;
+import cn.gentlewind.domain.strategy.model.entity.StrategyEntity;
+import cn.gentlewind.domain.strategy.model.entity.StrategyRuleEntity;
 import cn.gentlewind.domain.strategy.repository.IStrategyRepository;
 import cn.gentlewind.infrastructure.persistent.dao.IStrategyAwardDao;
 import cn.gentlewind.infrastructure.persistent.dao.IStrategyDao;
@@ -89,12 +89,12 @@ public class StrategyRepository implements IStrategyRepository {
      * @param strategyAwardSearchRateTable
      */
     @Override
-    public void storeStrategyAwardSearchRateTable(String key, Integer rateRange, Map<Integer, Long> strategyAwardSearchRateTable) {
+    public void storeStrategyAwardSearchRateTable(String key, Integer rateRange, Map<Integer, Integer> strategyAwardSearchRateTable) {
         // 1. 存储抽奖策略范围值，如10000
         redisService.setValue(Constants.RedisKey.STRATEGY_RATE_RANGE_KEY + key, rateRange);
         // 2. 存储概率查找表
         // 从获取或创建一个map
-        Map<Integer,Long> cacheRateTable = redisService.getMap(Constants.RedisKey.STRATEGY_RATE_TABLE_KEY + key);
+        Map<Integer,Integer> cacheRateTable = redisService.getMap(Constants.RedisKey.STRATEGY_RATE_TABLE_KEY + key);
         // 将value存入map
         cacheRateTable.putAll(strategyAwardSearchRateTable);
     }
@@ -166,5 +166,21 @@ public class StrategyRepository implements IStrategyRepository {
                 .ruleValue(strategyRuleRes.getRuleValue())
                 .ruleDesc(strategyRuleRes.getRuleDesc())
                 .build();
+    }
+
+    /**
+     * 根据策略id和规则模型查询策略规则值
+     * @param strategyId
+     * @param awardId
+     * @param ruleModel
+     * @return
+     */
+    @Override
+    public String queryStrategyRuleValue(Long strategyId, Integer awardId, String ruleModel) {
+        StrategyRulePO strategyRule = new StrategyRulePO();
+        strategyRule.setStrategyId(strategyId);
+        strategyRule.setAwardId(awardId);
+        strategyRule.setRuleModel(ruleModel);
+        return strategyRuleDao.queryStrategyRuleValue(strategyRule);
     }
 }

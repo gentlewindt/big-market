@@ -22,7 +22,7 @@ public class StrategyAwardPO {
 /**
  * 抽奖奖品ID - 内部流转使用
  */
-    private Long awardId;
+    private Integer awardId;
 /**
  * 抽奖奖品标题
  */

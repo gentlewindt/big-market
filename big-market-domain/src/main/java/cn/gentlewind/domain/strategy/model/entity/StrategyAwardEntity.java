@@ -1,4 +1,4 @@
-package cn.gentlewind.domain.strategy.model;
+package cn.gentlewind.domain.strategy.model.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,7 +20,7 @@ public class StrategyAwardEntity {
     /**
      * 抽奖奖品ID - 内部流转使用
      */
-    private Long awardId;
+    private Integer awardId;
     /**
      * 奖品库存总量
      */

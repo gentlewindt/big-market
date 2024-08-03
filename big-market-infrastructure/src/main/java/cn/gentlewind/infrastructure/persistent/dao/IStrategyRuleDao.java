@@ -11,4 +11,10 @@ public interface IStrategyRuleDao {
 
     StrategyRulePO queryStrategyRule(StrategyRulePO strategyRuleReq);
 
+    /**
+     * 查询rule_value规则值
+     * @param strategyRule
+     * @return
+     */
+    String queryStrategyRuleValue(StrategyRulePO strategyRule);
 }

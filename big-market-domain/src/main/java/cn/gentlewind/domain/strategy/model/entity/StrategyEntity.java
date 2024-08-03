@@ -1,4 +1,4 @@
-package cn.gentlewind.domain.strategy.model;
+package cn.gentlewind.domain.strategy.model.entity;
 
 import cn.gentlewind.types.common.Constants;
 import io.micrometer.core.instrument.util.StringUtils;

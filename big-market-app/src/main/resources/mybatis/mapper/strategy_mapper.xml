@@ -6,7 +6,7 @@
         <id column="id" property="id"/>
         <result column="strategy_id" property="strategyId"/>
         <result column="strategy_desc" property="strategyDesc"/>
-        <result column="rule_modules" property="ruleModels"/>
+        <result column="rule_models" property="ruleModels"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
 

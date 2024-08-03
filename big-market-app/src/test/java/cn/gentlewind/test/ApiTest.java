@@ -1,4 +1,4 @@
-package cn.gentlewind.test.domain;
+package cn.gentlewind.test;
 
 import cn.gentlewind.infrastructure.persistent.redis.IRedisService;
 import lombok.extern.slf4j.Slf4j;

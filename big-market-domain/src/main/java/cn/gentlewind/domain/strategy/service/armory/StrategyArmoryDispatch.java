@@ -1,8 +1,8 @@
 package cn.gentlewind.domain.strategy.service.armory;
 
-import cn.gentlewind.domain.strategy.model.StrategyAwardEntity;
-import cn.gentlewind.domain.strategy.model.StrategyEntity;
-import cn.gentlewind.domain.strategy.model.StrategyRuleEntity;
+import cn.gentlewind.domain.strategy.model.entity.StrategyAwardEntity;
+import cn.gentlewind.domain.strategy.model.entity.StrategyEntity;
+import cn.gentlewind.domain.strategy.model.entity.StrategyRuleEntity;
 import cn.gentlewind.domain.strategy.repository.IStrategyRepository;
 import cn.gentlewind.types.enums.ResponseCode;
 import cn.gentlewind.types.exception.AppException;
@@ -16,7 +16,7 @@ import java.security.SecureRandom;
 import java.util.*;
 
 
-
+@Slf4j
 @Service
 public class StrategyArmoryDispatch implements IStrategyArmory ,IStrategyDispatch{
 
@@ -92,6 +92,12 @@ public class StrategyArmoryDispatch implements IStrategyArmory ,IStrategyDispatc
                 .map(StrategyAwardEntity::getAwardRate) // 将每个StrategyAwardEntity对象的awardRate属性转换为BigDecimal类型。
                 .min(BigDecimal::compareTo) // 对每个BigDecimal对象执行compareTo进行自然排序，并返回最小值。
                 .orElse(BigDecimal.ZERO); // 如果`strategyAwardEntities`列表为空，则返回BigDecimal.ZERO零值
+                // .orElse(BigDecimal.ZERO) 的作用是确保 minAwardRate 总是有值。如果 min 函数找不到最小值（即列表为空），
+        // 那么 minAwardRate 将被设置为 BigDecimal.ZERO。这样可以避免在后续的代码中因为尝试使用 null 值而抛出 NullPointerException。
+        if (minAwardRate.compareTo(BigDecimal.ZERO) == 0) {
+            log.info("最小概率为0");
+            return; // 或者抛出异常，根据业务逻辑决定
+        }
 
 
         // 3. 获取概率值总和 totalAwardRate
@@ -108,7 +114,13 @@ public class StrategyArmoryDispatch implements IStrategyArmory ,IStrategyDispatc
 
         // 4. 用总概率除以最小概率拿到概率的范围（百分位、千分位、万分位）
         // 比如：用 1 / 0.0001 获得概率范围为10000，0.95 / 0.0001
-        BigDecimal rateRange = totalAwardRate.divide(minAwardRate, 0, RoundingMode.CEILING);
+        BigDecimal rateRange ;
+        try{
+            rateRange = totalAwardRate.divide(minAwardRate, 0, RoundingMode.CEILING);
+        } catch(ArithmeticException e) {
+            log.info("除法运算错误：总概率 = {}，最小概率 = {}", totalAwardRate, minAwardRate, e);
+            throw e;
+        }
 //        divide：除法运算
 //        - 除数：`minAwardRate`。
 //        - 小数位数：`0`，意味着结果将是一个整数。
@@ -116,9 +128,9 @@ public class StrategyArmoryDispatch implements IStrategyArmory ,IStrategyDispatc
 
         // 5. 生成策略奖品概率查找表「这里指需要在list集合中，存放上对应的奖品占位即可，占位越多等于概率越高」这种方法允许通过简单地随机选择列表中的一个元素来实现概率权重的选择机制。
         // 预定义一个查找表
-        List<Long> strategyAwardSearchRateTables = new ArrayList<>(rateRange.intValue()); // bigDecimal方法，转为int类型
+        List<Integer> strategyAwardSearchRateTables = new ArrayList<>(rateRange.intValue()); // bigDecimal方法，转为int类型
         for (StrategyAwardEntity strategyAward : strategyAwardEntities) {
-            Long awardId = strategyAward.getAwardId();
+            Integer awardId = strategyAward.getAwardId();
             BigDecimal awardRate = strategyAward.getAwardRate();
             // 计算出每个概率值需要存放到查找表的数量，循环填充
             // 通过计算 rateRange 和 awardRate 的乘积来确定每个奖项在查找表中应该出现的次数。rateRange.multiply(awardRate) 返回一个 BigDecimal，
@@ -135,7 +147,7 @@ public class StrategyArmoryDispatch implements IStrategyArmory ,IStrategyDispatc
 
         // 7. 将查找表添加到 Map 中，并且将索引作为键，奖品 ID 作为值存储到 Map 中。
         // 这样能够通过索引来获取对应的奖品 ID。
-        Map<Integer, Long> shuffleStrategyAwardSearchRateTable = new LinkedHashMap<>();
+        Map<Integer, Integer> shuffleStrategyAwardSearchRateTable = new LinkedHashMap<>();
         for (int i = 0; i < strategyAwardSearchRateTables.size(); i++) {
             shuffleStrategyAwardSearchRateTable.put(i, strategyAwardSearchRateTables.get(i));
         }
