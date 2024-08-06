@@ -9,7 +9,7 @@ import lombok.*;
  * @param <T>
  */
 @Data
-@Builder
+@Builder //Lombok会根据类中的属性自动生成一个构建器，可以通过该构建器来创建RuleActionEntity的实例。构建器支持链式调用，可以方便地设置对象的各个属性。
 @AllArgsConstructor
 @NoArgsConstructor
 public class RuleActionEntity<T extends RuleActionEntity.RaffleEntity> {
@@ -34,7 +34,6 @@ public class RuleActionEntity<T extends RuleActionEntity.RaffleEntity> {
          * 策略ID
          */
         private Long strategyId;
-
         /**
          * 权重值Key；用于抽奖时可以选择权重抽奖。
          */

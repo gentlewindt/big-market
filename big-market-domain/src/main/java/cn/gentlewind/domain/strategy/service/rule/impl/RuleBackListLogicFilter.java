@@ -43,6 +43,7 @@ public class RuleBackListLogicFilter implements ILogicFilter<RuleActionEntity.Ra
         // 从存储库中查询规则值配置。使用策略ID、奖项ID和规则模型作为查询参数。
         String ruleValue = repository.queryStrategyRuleValue(ruleMatterEntity.getStrategyId(), ruleMatterEntity.getAwardId(), ruleMatterEntity.getRuleModel());
 
+        log.info(ruleValue);
         // 将查询到的规则值字符串按冒号进行分割，得到一个字符串数组splitRuleValue。
         String[] splitRuleValue = ruleValue.split(Constants.COLON);
         // 从splitRuleValue数组中提取第一个元素，并将其转换为整数类型，表示黑名单用户的固定奖品ID。

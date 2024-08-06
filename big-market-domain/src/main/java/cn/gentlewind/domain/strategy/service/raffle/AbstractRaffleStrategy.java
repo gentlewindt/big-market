@@ -5,6 +5,7 @@ import cn.gentlewind.domain.strategy.model.entity.RaffleFactorEntity;
 import cn.gentlewind.domain.strategy.model.entity.RuleActionEntity;
 import cn.gentlewind.domain.strategy.model.entity.StrategyEntity;
 import cn.gentlewind.domain.strategy.model.vo.RuleLogicCheckTypeVO;
+import cn.gentlewind.domain.strategy.model.vo.StrategyAwardRuleModelVO;
 import cn.gentlewind.domain.strategy.repository.IStrategyRepository;
 import cn.gentlewind.domain.strategy.service.IRaffleStrategy;
 import cn.gentlewind.domain.strategy.service.armory.IStrategyDispatch;
@@ -55,11 +56,12 @@ public abstract class AbstractRaffleStrategy implements IRaffleStrategy {
 
         // 3. 抽奖前 - 规则过滤
         // 拿到规则过滤的规则，即用户id，策略id，奖品id
-        RuleActionEntity<RuleActionEntity.RaffleBeforeEntity> ruleActionEntity = this.doCheckRaffleBeforeLogic(RaffleFactorEntity.builder().userId(userId).strategyId(strategyId).build(), strategy.ruleModels());
+        RuleActionEntity<RuleActionEntity.RaffleBeforeEntity> ruleActionEntity = this
+                .doCheckRaffleBeforeLogic(RaffleFactorEntity.builder().userId(userId).strategyId(strategyId).build(), strategy.ruleModels());
 
         //  ruleActionEntity 的 code 属性是否表示需要规则引擎接管后续流程。如果相等，则执行特定的逻辑，否则继续按照默认流程进行
         if (RuleLogicCheckTypeVO.TAKE_OVER.getCode().equals(ruleActionEntity.getCode())) {
-            //
+
             if (DefaultLogicFactory.LogicModel.RULE_BLACKLIST.getCode().equals(ruleActionEntity.getRuleModel())) {
                 // 黑名单返回固定的奖品ID
                 return RaffleAwardEntity.builder()
@@ -79,6 +81,24 @@ public abstract class AbstractRaffleStrategy implements IRaffleStrategy {
         // 4. 默认抽奖流程
         Integer awardId = strategyDispatch.getRandomAwardId(strategyId);
 
+        // 5. 查询奖品规则：抽奖中（拿到奖品ID时，过滤规则）、抽奖后（扣减完奖品库存后过滤，抽奖中拦截和无库存则走兜底）
+        StrategyAwardRuleModelVO strategyAwardRuleModelVO = repository.queryStrategyAwardRuleModelVO(strategyId, awardId);
+
+        // 6. 抽奖中-规则过滤
+        RuleActionEntity<RuleActionEntity.RaffleCenterEntity> ruleActionCenterEntity = this.doCheckRaffleCenterLogic(RaffleFactorEntity.builder()
+                .userId(userId)
+                .strategyId(strategyId)
+                .awardId(awardId)
+                .build(), strategyAwardRuleModelVO.raffleCenterRuleModelList());
+
+        if(RuleLogicCheckTypeVO.TAKE_OVER.getCode().equals(ruleActionCenterEntity.getCode())){
+            log.info("【临时日志】中奖中规则拦截，通过抽奖后规则rule_luck_award 走兜底奖励。");
+            return RaffleAwardEntity. builder()
+                    .awardDesc("中奖中规则拦截，通过抽奖后规则rule_luck_award 走兜底奖励。")
+                    .build();
+        }
+
+
         return RaffleAwardEntity.builder()
                 .awardId(awardId)
                 .build();
@@ -87,4 +107,7 @@ public abstract class AbstractRaffleStrategy implements IRaffleStrategy {
     // 定义了一个抽象方法doCheckRaffleBeforeLogic，它由子类实现，用于实现抽奖前的规则过滤
     protected abstract RuleActionEntity<RuleActionEntity.RaffleBeforeEntity> doCheckRaffleBeforeLogic(RaffleFactorEntity raffleFactorEntity, String... logics);
 
+    protected abstract RuleActionEntity<RuleActionEntity.RaffleCenterEntity> doCheckRaffleCenterLogic(RaffleFactorEntity raffleFactorEntity, String... logics);
+
+//    protected abstract RuleActionEntity<RuleActionEntity.RaffleAfterEntity> doCheckRaffleAfterLogic(RaffleFactorEntity raffleFactorEntity, String... logics);
 }

@@ -24,9 +24,7 @@ public class StrategyArmoryDispatch implements IStrategyArmory ,IStrategyDispatc
     private IStrategyRepository repository;
 
     /**
-     * 重新构建策略奖品概率查找表
-     *
-     * 根据不同的策略和权重配置，生成并存储不同的抽奖策略查找表
+     * 构建策略奖品概率查找表
      *
      * @param strategyId 策略ID
      * @return
@@ -82,6 +80,7 @@ public class StrategyArmoryDispatch implements IStrategyArmory ,IStrategyDispatc
     /**
      * 根据策略和权值装配抽奖策略
      *
+     * 用于上面的方法进行重新装配，根据不同的策略和权重配置，生成并存储不同的抽奖策略查找表
      * @param key                   策略标识符字符串
      * @param strategyAwardEntities 包含奖品和对应概率的实体列表
      */

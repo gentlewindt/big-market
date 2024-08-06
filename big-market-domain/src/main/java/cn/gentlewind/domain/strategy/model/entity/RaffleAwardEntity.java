@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 抽奖奖品实体
+ * 抽奖抽出的奖品实体
  */
 
 @Data

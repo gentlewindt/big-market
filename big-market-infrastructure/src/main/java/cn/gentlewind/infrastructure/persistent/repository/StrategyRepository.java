@@ -3,6 +3,7 @@ package cn.gentlewind.infrastructure.persistent.repository;
 import cn.gentlewind.domain.strategy.model.entity.StrategyAwardEntity;
 import cn.gentlewind.domain.strategy.model.entity.StrategyEntity;
 import cn.gentlewind.domain.strategy.model.entity.StrategyRuleEntity;
+import cn.gentlewind.domain.strategy.model.vo.StrategyAwardRuleModelVO;
 import cn.gentlewind.domain.strategy.repository.IStrategyRepository;
 import cn.gentlewind.infrastructure.persistent.dao.IStrategyAwardDao;
 import cn.gentlewind.infrastructure.persistent.dao.IStrategyDao;
@@ -183,4 +184,15 @@ public class StrategyRepository implements IStrategyRepository {
         strategyRule.setRuleModel(ruleModel);
         return strategyRuleDao.queryStrategyRuleValue(strategyRule);
     }
+
+    @Override
+    public StrategyAwardRuleModelVO queryStrategyAwardRuleModelVO(Long strategyId, Integer awardId) {
+        StrategyAwardPO strategyAwardPO = new StrategyAwardPO();
+        strategyAwardPO.setStrategyId(strategyId);
+        strategyAwardPO.setAwardId(awardId);
+        String ruleModels = strategyAwardDao.queryStrategyAwardRuleModels(strategyAwardPO);
+        return StrategyAwardRuleModelVO.builder().ruleModels(ruleModels).build();
+    }
+
+
 }

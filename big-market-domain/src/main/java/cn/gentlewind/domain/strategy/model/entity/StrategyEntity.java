@@ -40,9 +40,12 @@ public class StrategyEntity {
         // 调用ruleModels方法获取规则模型数组。
         String[] ruleModels = this.ruleModels();
         // 遍历规则模型数组，如果包含"rule_weight"，则返回"rule_weight"。
-        for (String ruleModel : ruleModels) {
-            if ("rule_weight".equals(ruleModel)) return ruleModel;
+        if(ruleModels!=null){
+            for (String ruleModel : ruleModels) {
+                if ("rule_weight".equals(ruleModel)) return ruleModel;
+            }
         }
+
         return null;
     }
 
